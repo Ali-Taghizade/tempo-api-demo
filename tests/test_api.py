@@ -34,7 +34,46 @@ def assert_error(resp, status, code):
     return body["error"]
 
 
+# ---------- authentication ----------
+
+def test_missing_token():
+    err = assert_error(client.get("/api/v1/tasks"), 401, "AUTH_REQUIRED")
+    assert "Bearer" in err["message"]
+
+
+def test_wrong_scheme():
+    assert_error(client.get("/api/v1/tasks", headers={"Authorization": "user-a-token"}), 401, "AUTH_REQUIRED")
+
+
+def test_invalid_token():
+    assert_error(client.get("/api/v1/tasks", headers={"Authorization": "Bearer nope"}), 401, "INVALID_TOKEN")
+
+
 # ---------- list ----------
+
+def test_user_lists_only_own_tasks():
+    body = client.get("/api/v1/tasks", headers=A).json()
+    assert body["success"] is True
+    assert {t["ownerId"] for t in body["data"]} == {"user-a"}
+    assert body["meta"] == {"total": 3, "page": 1, "perPage": 10}
+
+
+def test_admin_lists_all_and_filters_by_owner():
+    assert client.get("/api/v1/tasks", headers=ADMIN).json()["meta"]["total"] == 7
+    body = client.get("/api/v1/tasks?ownerId=user-b", headers=ADMIN).json()
+    assert {t["ownerId"] for t in body["data"]} == {"user-b"}
+
+
+def test_user_cannot_filter_other_owner():
+    assert_error(client.get("/api/v1/tasks?ownerId=user-b", headers=A), 403, "FORBIDDEN")
+
+
+def test_filters_and_pagination():
+    body = client.get("/api/v1/tasks?day=mon", headers=A).json()
+    assert [t["id"] for t in body["data"]] == ["task_101", "task_102"]
+    body = client.get("/api/v1/tasks?page=2&perPage=2", headers=A).json()
+    assert len(body["data"]) == 1 and body["meta"] == {"total": 3, "page": 2, "perPage": 2}
+
 
 def test_bad_query_params():
     err = assert_error(client.get("/api/v1/tasks?day=monday&perPage=100&page=0", headers=A), 400, "VALIDATION_ERROR")

@@ -1,9 +1,10 @@
 """CRUD endpoints for the task resource."""
 
-from fastapi import APIRouter, Path, Query
+from fastapi import APIRouter, Depends, Path, Query
 
 from app import mock_data
-from app.errors import NotFound
+from app.auth import can_access, get_current_user, is_admin
+from app.errors import Forbidden, NotFound
 from app.responses import success
 from app.schemas import DAY_ORDER, Category, Day, Priority
 
@@ -16,23 +17,36 @@ def _sort_key(task: dict):
     return (min(DAY_ORDER.index(d) for d in task["daysOfWeek"]), task["startTime"], task["id"])
 
 
-def _find_task(task_id: str) -> dict:
-    """Return the task or raise 404."""
+def _find_task(task_id: str, user: dict) -> dict:
+    """Return the task if it exists AND the user may access it.
+
+    A regular user asking for another user's task gets 404 (not 403) so the API
+    does not reveal that the task exists.
+    """
     task = mock_data.tasks.get(task_id)
-    if task is None:
+    if task is None or not can_access(user, task):
         raise NotFound(f"Task '{task_id}' was not found.")
     return task
 
 
 @router.get("", summary="List tasks")
 def list_tasks(
+    user: dict = Depends(get_current_user),
     day: Day | None = Query(default=None, description="Only tasks that happen on this day"),
     category: Category | None = Query(default=None),
     priority: Priority | None = Query(default=None),
+    owner_id: str | None = Query(default=None, alias="ownerId", description="Admin only: filter by owner"),
     page: int = Query(default=1, ge=1),
     per_page: int = Query(default=10, ge=1, le=50, alias="perPage"),
 ):
-    visible = list(mock_data.tasks.values())
+    if is_admin(user):
+        visible = list(mock_data.tasks.values())
+        if owner_id is not None:
+            visible = [t for t in visible if t["ownerId"] == owner_id]
+    else:
+        if owner_id is not None and owner_id != user["id"]:
+            raise Forbidden("Only administrators can list tasks of other users.")
+        visible = [t for t in mock_data.tasks.values() if t["ownerId"] == user["id"]]
 
     if day is not None:
         visible = [t for t in visible if day in t["daysOfWeek"]]
@@ -51,5 +65,5 @@ def list_tasks(
 
 
 @router.get("/{task_id}", summary="Get one task")
-def get_task(task_id: str = TaskId):
-    return success(_find_task(task_id), "Task retrieved successfully.")
+def get_task(task_id: str = TaskId, user: dict = Depends(get_current_user)):
+    return success(_find_task(task_id, user), "Task retrieved successfully.")

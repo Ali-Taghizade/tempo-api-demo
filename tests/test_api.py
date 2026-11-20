@@ -49,6 +49,10 @@ def test_invalid_token():
     assert_error(client.get("/api/v1/tasks", headers={"Authorization": "Bearer nope"}), 401, "INVALID_TOKEN")
 
 
+def test_auth_checked_before_validation():
+    assert_error(client.post("/api/v1/tasks", json={"title": "x"}), 401, "AUTH_REQUIRED")
+
+
 # ---------- list ----------
 
 def test_user_lists_only_own_tasks():
@@ -95,6 +99,67 @@ def test_get_non_existent():
 def test_get_malformed_id():
     err = assert_error(client.get("/api/v1/tasks/abc", headers=A), 400, "VALIDATION_ERROR")
     assert err["details"] == [{"field": "id", "message": "Task ID must look like 'task_101'."}]
+
+
+# ---------- create ----------
+
+def test_create_task():
+    resp = client.post("/api/v1/tasks", headers=A, json=VALID)
+    assert resp.status_code == 201
+    data = resp.json()["data"]
+    assert data["id"] == "task_108" and data["ownerId"] == "user-a"
+    assert data["daysOfWeek"] == ["tue", "thu"]  # sorted
+    assert data["priority"] == "medium" and data["isFixed"] is False and data["description"] is None
+
+
+def test_user_cannot_create_for_other_user():
+    assert_error(client.post("/api/v1/tasks", headers=A, json={**VALID, "ownerId": "user-b"}), 403, "FORBIDDEN")
+
+
+def test_admin_creates_for_user():
+    resp = client.post("/api/v1/tasks", headers=ADMIN, json={**VALID, "ownerId": "user-b"})
+    assert resp.status_code == 201 and resp.json()["data"]["ownerId"] == "user-b"
+
+
+def test_admin_unknown_owner():
+    err = assert_error(client.post("/api/v1/tasks", headers=ADMIN, json={**VALID, "ownerId": "ghost"}), 400, "VALIDATION_ERROR")
+    assert err["details"][0]["field"] == "ownerId"
+
+
+def test_create_validation_errors():
+    bad = {"title": "Hi", "daysOfWeek": ["monday"], "startTime": "10:00", "endTime": "09:00",
+           "category": "study", "color": "red", "id": "task_1", "isFixed": "yes"}
+    err = assert_error(client.post("/api/v1/tasks", headers=A, json=bad), 400, "VALIDATION_ERROR")
+    by_field = {d["field"]: d["message"] for d in err["details"]}
+    assert set(by_field) == {"title", "daysOfWeek[0]", "endTime", "color", "id", "isFixed"}
+    assert by_field["color"] == "Unknown field."
+    assert "read-only" in by_field["id"]
+
+
+def test_create_missing_fields():
+    err = assert_error(client.post("/api/v1/tasks", headers=A, json={}), 400, "VALIDATION_ERROR")
+    assert {d["field"] for d in err["details"]} == {"title", "daysOfWeek", "startTime", "endTime", "category"}
+
+
+def test_create_wrong_types_and_blank_title():
+    err = assert_error(client.post("/api/v1/tasks", headers=A,
+                                   json={**VALID, "title": "     ", "daysOfWeek": "mon", "startTime": 7}),
+                       400, "VALIDATION_ERROR")
+    assert {d["field"] for d in err["details"]} == {"title", "daysOfWeek", "startTime"}
+
+
+def test_create_duplicate_days_and_bad_time():
+    err = assert_error(client.post("/api/v1/tasks", headers=A,
+                                   json={**VALID, "daysOfWeek": ["mon", "mon"], "endTime": "25:00"}),
+                       400, "VALIDATION_ERROR")
+    assert {d["field"] for d in err["details"]} == {"daysOfWeek", "endTime"}
+
+
+def test_invalid_json_and_non_object():
+    resp = client.post("/api/v1/tasks", headers={**A, "Content-Type": "application/json"}, content="{bad json")
+    err = assert_error(resp, 400, "VALIDATION_ERROR")
+    assert err["details"] == [{"field": "body", "message": "Request body must be valid JSON."}]
+    assert_error(client.post("/api/v1/tasks", headers=A, json=[1, 2]), 400, "VALIDATION_ERROR")
 
 
 # ---------- routing ----------

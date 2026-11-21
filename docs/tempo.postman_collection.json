@@ -1,0 +1,920 @@
+{
+  "info": {
+    "name": "Project Tempo API",
+    "description": "Example requests for the Tempo task API prototype. Restart the server to reset mock data.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Greeting",
+      "item": [
+        {
+          "name": "Greeting page (HTML)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/greeting",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "greeting"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. CRUD as User A",
+      "item": [
+        {
+          "name": "List my tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List my Monday tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks?day=mon",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ],
+              "query": [
+                {
+                  "key": "day",
+                  "value": "mon"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List page 2 (perPage=2)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks?page=2&perPage=2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2"
+                },
+                {
+                  "key": "perPage",
+                  "value": "2"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get my task",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/task_101",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "task_101"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create task -> 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Morning run\",\n  \"daysOfWeek\": [\n    \"tue\",\n    \"thu\"\n  ],\n  \"startTime\": \"07:00\",\n  \"endTime\": \"07:45\",\n  \"category\": \"health\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update my task -> 200",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/task_102",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "task_102"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Evening gym\",\n  \"description\": \"Leg day on Friday\",\n  \"daysOfWeek\": [\n    \"mon\",\n    \"wed\",\n    \"fri\"\n  ],\n  \"startTime\": \"18:30\",\n  \"endTime\": \"19:30\",\n  \"category\": \"health\",\n  \"priority\": \"high\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete my task -> 200",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/task_103",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "task_103"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Authentication errors",
+      "item": [
+        {
+          "name": "No token -> 401 AUTH_REQUIRED",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Invalid token -> 401 INVALID_TOKEN",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer wrong-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Authorization",
+      "item": [
+        {
+          "name": "User A gets User B task -> 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/task_104",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "task_104"
+              ]
+            }
+          }
+        },
+        {
+          "name": "User A updates User B task -> 404",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/task_104",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "task_104"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Morning run\",\n  \"daysOfWeek\": [\n    \"tue\",\n    \"thu\"\n  ],\n  \"startTime\": \"07:00\",\n  \"endTime\": \"07:45\",\n  \"category\": \"health\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "User A deletes User B task -> 404",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/task_104",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "task_104"
+              ]
+            }
+          }
+        },
+        {
+          "name": "User B gets User A task -> 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-b-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/task_101",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "task_101"
+              ]
+            }
+          }
+        },
+        {
+          "name": "User A creates task for User B -> 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Morning run\",\n  \"daysOfWeek\": [\n    \"tue\",\n    \"thu\"\n  ],\n  \"startTime\": \"07:00\",\n  \"endTime\": \"07:45\",\n  \"category\": \"health\",\n  \"ownerId\": \"user-b\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "User A lists User B tasks -> 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks?ownerId=user-b",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ],
+              "query": [
+                {
+                  "key": "ownerId",
+                  "value": "user-b"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin lists all tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer admin-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin lists User B tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer admin-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks?ownerId=user-b",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ],
+              "query": [
+                {
+                  "key": "ownerId",
+                  "value": "user-b"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin gets User B task",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer admin-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/task_104",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "task_104"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin updates User B task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer admin-token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/task_104",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "task_104"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Part-time job shift (moved)\",\n  \"daysOfWeek\": [\n    \"wed\",\n    \"thu\"\n  ],\n  \"startTime\": \"14:00\",\n  \"endTime\": \"18:00\",\n  \"category\": \"work\",\n  \"priority\": \"high\",\n  \"isFixed\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Admin creates task for User A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer admin-token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Team meeting\",\n  \"daysOfWeek\": [\n    \"thu\"\n  ],\n  \"startTime\": \"11:00\",\n  \"endTime\": \"12:00\",\n  \"category\": \"work\",\n  \"ownerId\": \"user-a\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Admin deletes User B task",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer admin-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/task_105",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "task_105"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Validation and other errors",
+      "item": [
+        {
+          "name": "Invalid body -> 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Hi\",\n  \"daysOfWeek\": [\n    \"monday\"\n  ],\n  \"startTime\": \"10:00\",\n  \"endTime\": \"09:00\",\n  \"category\": \"study\",\n  \"isFixed\": \"yes\",\n  \"color\": \"red\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Empty body -> 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Partial PUT -> 400",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/task_101",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "task_101"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Only a title\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Bad query params -> 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks?day=monday&perPage=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ],
+              "query": [
+                {
+                  "key": "day",
+                  "value": "monday"
+                },
+                {
+                  "key": "perPage",
+                  "value": "100"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Malformed id -> 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "abc"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Non-existent task -> 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/task_999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "task_999"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Overlaps fixed task -> 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Quick review\",\n  \"daysOfWeek\": [\n    \"mon\"\n  ],\n  \"startTime\": \"09:30\",\n  \"endTime\": \"10:00\",\n  \"category\": \"study\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Unsupported method -> 405",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer user-a-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/task_101",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "task_101"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unknown route -> 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/nothing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "nothing"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

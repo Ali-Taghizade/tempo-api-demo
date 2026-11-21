@@ -1,0 +1,276 @@
+# Example requests for Project Tempo API.
+# Use with VS Code "REST Client" extension or JetBrains HTTP Client.
+# Restart the server to reset mock data before running the whole file.
+
+@base = http://localhost:8000
+
+### ===== 1. Greeting =====
+
+### Greeting page (HTML)
+GET {{base}}/api/v1/greeting
+
+
+### ===== 2. CRUD as User A =====
+
+### List my tasks
+GET {{base}}/api/v1/tasks
+Authorization: Bearer user-a-token
+
+
+### List my Monday tasks
+GET {{base}}/api/v1/tasks?day=mon
+Authorization: Bearer user-a-token
+
+
+### List page 2 (perPage=2)
+GET {{base}}/api/v1/tasks?page=2&perPage=2
+Authorization: Bearer user-a-token
+
+
+### Get my task
+GET {{base}}/api/v1/tasks/task_101
+Authorization: Bearer user-a-token
+
+
+### Create task -> 201
+POST {{base}}/api/v1/tasks
+Authorization: Bearer user-a-token
+Content-Type: application/json
+
+{
+  "title": "Morning run",
+  "daysOfWeek": [
+    "tue",
+    "thu"
+  ],
+  "startTime": "07:00",
+  "endTime": "07:45",
+  "category": "health"
+}
+
+
+### Update my task -> 200
+PUT {{base}}/api/v1/tasks/task_102
+Authorization: Bearer user-a-token
+Content-Type: application/json
+
+{
+  "title": "Evening gym",
+  "description": "Leg day on Friday",
+  "daysOfWeek": [
+    "mon",
+    "wed",
+    "fri"
+  ],
+  "startTime": "18:30",
+  "endTime": "19:30",
+  "category": "health",
+  "priority": "high"
+}
+
+
+### Delete my task -> 200
+DELETE {{base}}/api/v1/tasks/task_103
+Authorization: Bearer user-a-token
+
+
+### ===== 3. Authentication errors =====
+
+### No token -> 401 AUTH_REQUIRED
+GET {{base}}/api/v1/tasks
+
+
+### Invalid token -> 401 INVALID_TOKEN
+GET {{base}}/api/v1/tasks
+Authorization: Bearer wrong-token
+
+
+### ===== 4. Authorization =====
+
+### User A gets User B task -> 404
+GET {{base}}/api/v1/tasks/task_104
+Authorization: Bearer user-a-token
+
+
+### User A updates User B task -> 404
+PUT {{base}}/api/v1/tasks/task_104
+Authorization: Bearer user-a-token
+Content-Type: application/json
+
+{
+  "title": "Morning run",
+  "daysOfWeek": [
+    "tue",
+    "thu"
+  ],
+  "startTime": "07:00",
+  "endTime": "07:45",
+  "category": "health"
+}
+
+
+### User A deletes User B task -> 404
+DELETE {{base}}/api/v1/tasks/task_104
+Authorization: Bearer user-a-token
+
+
+### User B gets User A task -> 404
+GET {{base}}/api/v1/tasks/task_101
+Authorization: Bearer user-b-token
+
+
+### User A creates task for User B -> 403
+POST {{base}}/api/v1/tasks
+Authorization: Bearer user-a-token
+Content-Type: application/json
+
+{
+  "title": "Morning run",
+  "daysOfWeek": [
+    "tue",
+    "thu"
+  ],
+  "startTime": "07:00",
+  "endTime": "07:45",
+  "category": "health",
+  "ownerId": "user-b"
+}
+
+
+### User A lists User B tasks -> 403
+GET {{base}}/api/v1/tasks?ownerId=user-b
+Authorization: Bearer user-a-token
+
+
+### Admin lists all tasks
+GET {{base}}/api/v1/tasks
+Authorization: Bearer admin-token
+
+
+### Admin lists User B tasks
+GET {{base}}/api/v1/tasks?ownerId=user-b
+Authorization: Bearer admin-token
+
+
+### Admin gets User B task
+GET {{base}}/api/v1/tasks/task_104
+Authorization: Bearer admin-token
+
+
+### Admin updates User B task
+PUT {{base}}/api/v1/tasks/task_104
+Authorization: Bearer admin-token
+Content-Type: application/json
+
+{
+  "title": "Part-time job shift (moved)",
+  "daysOfWeek": [
+    "wed",
+    "thu"
+  ],
+  "startTime": "14:00",
+  "endTime": "18:00",
+  "category": "work",
+  "priority": "high",
+  "isFixed": true
+}
+
+
+### Admin creates task for User A
+POST {{base}}/api/v1/tasks
+Authorization: Bearer admin-token
+Content-Type: application/json
+
+{
+  "title": "Team meeting",
+  "daysOfWeek": [
+    "thu"
+  ],
+  "startTime": "11:00",
+  "endTime": "12:00",
+  "category": "work",
+  "ownerId": "user-a"
+}
+
+
+### Admin deletes User B task
+DELETE {{base}}/api/v1/tasks/task_105
+Authorization: Bearer admin-token
+
+
+### ===== 5. Validation and other errors =====
+
+### Invalid body -> 400
+POST {{base}}/api/v1/tasks
+Authorization: Bearer user-a-token
+Content-Type: application/json
+
+{
+  "title": "Hi",
+  "daysOfWeek": [
+    "monday"
+  ],
+  "startTime": "10:00",
+  "endTime": "09:00",
+  "category": "study",
+  "isFixed": "yes",
+  "color": "red"
+}
+
+
+### Empty body -> 400
+POST {{base}}/api/v1/tasks
+Authorization: Bearer user-a-token
+Content-Type: application/json
+
+{}
+
+
+### Partial PUT -> 400
+PUT {{base}}/api/v1/tasks/task_101
+Authorization: Bearer user-a-token
+Content-Type: application/json
+
+{
+  "title": "Only a title"
+}
+
+
+### Bad query params -> 400
+GET {{base}}/api/v1/tasks?day=monday&perPage=100
+Authorization: Bearer user-a-token
+
+
+### Malformed id -> 400
+GET {{base}}/api/v1/tasks/abc
+Authorization: Bearer user-a-token
+
+
+### Non-existent task -> 404
+GET {{base}}/api/v1/tasks/task_999
+Authorization: Bearer user-a-token
+
+
+### Overlaps fixed task -> 409
+POST {{base}}/api/v1/tasks
+Authorization: Bearer user-a-token
+Content-Type: application/json
+
+{
+  "title": "Quick review",
+  "daysOfWeek": [
+    "mon"
+  ],
+  "startTime": "09:30",
+  "endTime": "10:00",
+  "category": "study"
+}
+
+
+### Unsupported method -> 405
+PATCH {{base}}/api/v1/tasks/task_101
+Authorization: Bearer user-a-token
+
+
+### Unknown route -> 404
+GET {{base}}/api/v1/nothing

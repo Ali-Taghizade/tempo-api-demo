@@ -9,11 +9,10 @@ router = APIRouter(prefix="/api/v1", tags=["greeting"])
 
 API_VERSION = "v1"
 
-# TODO: replace the student IDs before submitting.
 TEAM = [
-    ("Ali Taghizade", "TODO_ID", "Project setup, error handling, task validation and the create endpoint"),
-    ("Emil Jafarov", "TODO_ID", "Mock data, list and get endpoints with filtering and pagination, and this greeting page"),
-    ("Nuran Bayramov", "TODO_ID", "Token authentication, role checks, update and delete endpoints and the conflict rule"),
+    ("Ali Taghizade", "20425", "Project setup, error handling, task validation and the create endpoint"),
+    ("Emil Jafarov", "20416", "Mock data, list and get endpoints with filtering and pagination, and this greeting page"),
+    ("Nuran Bayramov", "20546", "Token authentication, role checks, update and delete endpoints and the conflict rule"),
 ]
 
 ENDPOINTS = [

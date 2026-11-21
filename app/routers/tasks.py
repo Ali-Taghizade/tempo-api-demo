@@ -1,16 +1,22 @@
 """CRUD endpoints for the task resource."""
 
-from fastapi import APIRouter, Depends, Path, Query
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, Body, Depends, Path, Query
 
 from app import mock_data
 from app.auth import can_access, get_current_user, is_admin
-from app.errors import Forbidden, NotFound
+from app.errors import Forbidden, NotFound, ValidationFailed
 from app.responses import success
-from app.schemas import DAY_ORDER, Category, Day, Priority
+from app.schemas import DAY_ORDER, Category, Day, Priority, TaskIn
 
 router = APIRouter(prefix="/api/v1/tasks", tags=["tasks"])
 
 TaskId = Path(pattern=r"^task_\d+$", description="Task ID, e.g. task_101")
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _sort_key(task: dict):
@@ -27,6 +33,18 @@ def _find_task(task_id: str, user: dict) -> dict:
     if task is None or not can_access(user, task):
         raise NotFound(f"Task '{task_id}' was not found.")
     return task
+
+
+def _resolve_owner(body: TaskIn, user: dict, current_owner: str | None = None) -> str:
+    """Decide who owns the task after a create/update."""
+    requested = body.ownerId
+    if requested is None:
+        return current_owner or user["id"]
+    if not is_admin(user) and requested != user["id"]:
+        raise Forbidden("You can only create or update tasks for yourself.")
+    if requested not in mock_data.USER_IDS:
+        raise ValidationFailed([{"field": "ownerId", "message": f"User '{requested}' does not exist."}])
+    return requested
 
 
 @router.get("", summary="List tasks")
@@ -67,3 +85,18 @@ def list_tasks(
 @router.get("/{task_id}", summary="Get one task")
 def get_task(task_id: str = TaskId, user: dict = Depends(get_current_user)):
     return success(_find_task(task_id, user), "Task retrieved successfully.")
+
+
+@router.post("", status_code=201, summary="Create a task")
+def create_task(body: TaskIn = Body(...), user: dict = Depends(get_current_user)):
+    owner_id = _resolve_owner(body, user)
+    now = _now()
+    task = {
+        "id": mock_data.next_task_id(),
+        "ownerId": owner_id,
+        **body.model_dump(exclude={"ownerId"}),
+        "createdAt": now,
+        "updatedAt": now,
+    }
+    mock_data.tasks[task["id"]] = task
+    return success(task, "Task created successfully.", status_code=201)

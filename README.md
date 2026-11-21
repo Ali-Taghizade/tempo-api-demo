@@ -98,7 +98,7 @@ tests/                 # pytest suite covering every scenario
 
 ## Demo video
 
-YouTube: <DEMO_VIDEO_LINK>
+YouTube: <[DEMO_VIDEO_LINK](https://www.youtube.com/watch?v=Zy07q0s3D4c)>
 
 ## Team and contributions
 

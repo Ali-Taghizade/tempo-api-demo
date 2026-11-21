@@ -34,6 +34,15 @@ def assert_error(resp, status, code):
     return body["error"]
 
 
+# ---------- greeting ----------
+
+def test_greeting_returns_html():
+    resp = client.get("/api/v1/greeting")
+    assert resp.status_code == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+    assert "Project Tempo" in resp.text and "/api/v1/tasks" in resp.text
+
+
 # ---------- authentication ----------
 
 def test_missing_token():

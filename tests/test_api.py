@@ -101,6 +101,19 @@ def test_get_malformed_id():
     assert err["details"] == [{"field": "id", "message": "Task ID must look like 'task_101'."}]
 
 
+@pytest.mark.parametrize("method", ["get", "put", "delete"])
+def test_user_a_cannot_touch_user_b_task(method):
+    kwargs = {"json": VALID} if method == "put" else {}
+    assert_error(getattr(client, method)("/api/v1/tasks/task_104", headers=A, **kwargs), 404, "NOT_FOUND")
+    assert "task_104" in mock_data.tasks
+
+
+@pytest.mark.parametrize("method", ["get", "put", "delete"])
+def test_user_b_cannot_touch_user_a_task(method):
+    kwargs = {"json": VALID} if method == "put" else {}
+    assert_error(getattr(client, method)("/api/v1/tasks/task_102", headers=B, **kwargs), 404, "NOT_FOUND")
+
+
 # ---------- create ----------
 
 def test_create_task():
@@ -162,7 +175,78 @@ def test_invalid_json_and_non_object():
     assert_error(client.post("/api/v1/tasks", headers=A, json=[1, 2]), 400, "VALIDATION_ERROR")
 
 
+def test_conflict_with_fixed_task():
+    err = assert_error(client.post("/api/v1/tasks", headers=A,
+                                   json={**VALID, "daysOfWeek": ["mon"], "startTime": "09:30", "endTime": "10:00"}),
+                       409, "CONFLICT")
+    assert "task_101" in err["message"]
+    assert "task_108" not in mock_data.tasks
+
+
+def test_flexible_tasks_may_overlap():
+    resp = client.post("/api/v1/tasks", headers=A,
+                       json={**VALID, "daysOfWeek": ["mon"], "startTime": "18:30", "endTime": "19:30"})
+    assert resp.status_code == 201
+
+
+def test_other_users_fixed_tasks_do_not_conflict():
+    resp = client.post("/api/v1/tasks", headers=A,
+                       json={**VALID, "daysOfWeek": ["tue"], "startTime": "14:00", "endTime": "15:00"})
+    assert resp.status_code == 201
+
+
+# ---------- update ----------
+
+def test_update_own_task():
+    resp = client.put("/api/v1/tasks/task_102", headers=A, json={**VALID, "title": "Evening gym"})
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert data["id"] == "task_102" and data["title"] == "Evening gym"
+    assert data["createdAt"] == "2026-11-10T08:00:00Z" and data["updatedAt"] != data["createdAt"]
+
+
+def test_update_fixed_task_does_not_conflict_with_itself():
+    body = {"title": "Data Structures lecture", "daysOfWeek": ["mon", "wed"], "startTime": "09:00",
+            "endTime": "11:00", "category": "study", "isFixed": True}
+    assert client.put("/api/v1/tasks/task_101", headers=A, json=body).status_code == 200
+
+
+def test_update_requires_full_body():
+    assert_error(client.put("/api/v1/tasks/task_102", headers=A, json={"title": "Only title"}), 400, "VALIDATION_ERROR")
+
+
+def test_update_non_existent():
+    assert_error(client.put("/api/v1/tasks/task_999", headers=A, json=VALID), 404, "NOT_FOUND")
+
+
+def test_admin_updates_any_task():
+    resp = client.put("/api/v1/tasks/task_104", headers=ADMIN,
+                      json={**VALID, "daysOfWeek": ["mon"], "title": "Moved shift"})
+    assert resp.status_code == 200
+    assert resp.json()["data"]["ownerId"] == "user-b"  # owner kept when ownerId omitted
+
+
+# ---------- delete ----------
+
+def test_delete_own_task():
+    resp = client.delete("/api/v1/tasks/task_103", headers=A)
+    assert resp.status_code == 200 and resp.json()["data"] is None
+    assert_error(client.get("/api/v1/tasks/task_103", headers=A), 404, "NOT_FOUND")
+
+
+def test_admin_deletes_any_task():
+    assert client.delete("/api/v1/tasks/task_105", headers=ADMIN).status_code == 200
+    assert "task_105" not in mock_data.tasks
+
+
 # ---------- routing ----------
+
+def test_method_not_allowed():
+    resp = client.patch("/api/v1/tasks/task_101", headers=A, json={})
+    assert_error(resp, 405, "METHOD_NOT_ALLOWED")
+    assert "PUT" in resp.headers["allow"]
+    assert_error(client.delete("/api/v1/tasks", headers=A), 405, "METHOD_NOT_ALLOWED")
+
 
 def test_unknown_route():
     assert_error(client.get("/api/v1/nothing"), 404, "ROUTE_NOT_FOUND")
